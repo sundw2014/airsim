@@ -89,18 +89,23 @@ for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
 ####################### The controller ######################
 def u(x, goal):
     # the controller
-    UX = Ks[0].dot(np.array([x[0], 0, 0, 0]) - x[[0, 1, 8, 9]])[0]
-    UY = Ks[1].dot(np.array([x[1], 0, 0, 0]) - x[[2, 3, 6, 7]])[0]
-    UZ = Ks[2].dot(np.array([x[2], 0]) - x[[4, 5]])[0]
+    UX = Ks[0].dot(np.array([goal[0], 0, 0, 0]) - x[[0, 1, 8, 9]])[0]
+    UY = Ks[1].dot(np.array([goal[1], 0, 0, 0]) - x[[2, 3, 6, 7]])[0]
+    UZ = Ks[2].dot(np.array([goal[2], 0]) - x[[4, 5]])[0]
     UYaw = Ks[3].dot(np.array([0, 0]) - x[[10, 11]])[0]
     return np.array([UZ, UY, UX, UYaw])
 
 ######################## The closed_loop system #######################
-def cl_nonlinear(x, goal):
+def cl_nonlinear(x, t, goal):
     x = np.array(x)
     dot_x = dynamics.f(x, u(x, goal) + np.array([m * g, 0, 0, 0]))
     return dot_x
 
 # simulate
 def simulate(x, goal, dt):
+    curr_position = np.array(x)[[0,2,4]]
+    error = goal - curr_position
+    distance = np.sqrt((error**2).sum())
+    if distance > 1:
+        goal = curr_position + error / distance
     return odeint(cl_nonlinear, x, [0, dt], args=(goal,))[-1]

@@ -15,6 +15,10 @@ def State(phase, idx=None, coord=None):
 def to_list(x):
     return [x.x_val, x.y_val, x.z_val]
 
+def distance(x, y):
+    e = (np.array(x) - np.array(y))
+    return np.sqrt((e ** 2).sum())
+
 # drone_name should match the name in ~/Document/AirSim/settings.json
 class BaselineRacer(object):
     def __init__(
@@ -32,6 +36,7 @@ class BaselineRacer(object):
 
         self.airsim_client = airsim.MultirotorClient()
         self.airsim_client.confirmConnection()
+        self.airsim_client.race_tier = 1
         # we need two airsim MultirotorClient objects because the comm lib we use (rpclib) is not thread safe
         # so we poll images in a thread using one airsim MultirotorClient object
         # and use another airsim MultirotorClient for querying state commands
@@ -346,25 +351,29 @@ class BaselineRacer(object):
             if state['phase'] == 'terminate':
                 break
             state = self.next_state(x, state)
-            x = simulate(x, goal, dt)
+            print(np.array(x)[[0,2,4]], state['coord'])
+            x = simulate(x, state['coord'], dt)
             pose.position.x_val = x[0]
             pose.position.y_val = x[2]
             pose.position.z_val = x[4]
-            q = quaternion_from_euler(x[6], x[8], x[10])
+            q = transformations.quaternion_from_euler(x[6], x[8], x[10])
             pose.orientation.w_val = q[0]
             pose.orientation.x_val = q[1]
             pose.orientation.y_val = q[2]
             pose.orientation.z_val = q[3]
             self.airsim_client.simSetVehiclePose(pose,
-                vehicle_name=self.drone_name
+                vehicle_name=self.drone_name,
+                ignore_collison=True
             )
             t += dt
+            time.sleep(0.1)
 
     def next_state(self, curr_pose, state):
         if state['phase'] == 'init':
             state = State('before', 0, self.before_gate(0))
         else:
-            if distance(curr_pose, state['coord']) < threshold:
+            threshold = 0.1
+            if distance(np.array(curr_pose)[[0,2,4]], state['coord']) < threshold:
                 if state['phase'] == 'before':
                     state['phase'] = 'center'
                     state['coord'] = self.center_gate(state['id'])
@@ -382,7 +391,7 @@ class BaselineRacer(object):
 
     def before_gate(self, idx):
         gate_pose = self.gate_poses_ground_truth[idx]
-        return tolist(gate_pose.position - self.get_gate_facing_vector_from_quaternion(gate_pose.orientation, scale=1.0))
+        return to_list(gate_pose.position - self.get_gate_facing_vector_from_quaternion(gate_pose.orientation, scale=1.0))
 
     def center_gate(self, idx):
         gate_pose = self.gate_poses_ground_truth[idx]
@@ -451,9 +460,7 @@ def main(args):
     # ensure you have generated the neurips planning settings file by running python generate_settings_file.py
     baseline_racer = BaselineRacer(
         drone_name="drone_1",
-        viz_traj=args.viz_traj,
         viz_traj_color_rgba=[1.0, 1.0, 0.0, 1.0],
-        viz_image_cv2=args.viz_image_cv2,
     )
     baseline_racer.load_level(args.level_name)
     # if args.level_name == "Qualifier_Tier_1":
@@ -506,9 +513,6 @@ if __name__ == "__main__":
             "Final_Tier_3",
         ],
         default="ZhangJiaJie_Medium",
-    )
-    parser.add_argument(
-        "--enable_viz_traj", dest="viz_traj", action="store_true", default=False
     )
     args = parser.parse_args()
     main(args)
