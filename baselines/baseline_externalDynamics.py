@@ -345,7 +345,7 @@ class BaselineRacer(object):
             dtype=np.float64,
         )
         theta_x, theta_y, theta_z = transformations.euler_from_quaternion(q)
-        x = [pose.position.x_val, pose.position.y_val, pose.position.z_val, 0, 0, 0, theta_x, theta_y]
+        x = [pose.position.x_val, pose.position.y_val, pose.position.z_val, 0, 0, 0, theta_x, theta_y, 0, 0]
         while True:
             if state['phase'] == 'terminate':
                 break
@@ -355,7 +355,7 @@ class BaselineRacer(object):
             pose.position.x_val = x[0]
             pose.position.y_val = x[1]
             pose.position.z_val = x[2]
-            q = transformations.quaternion_from_euler(x[-2], x[-1], 0)
+            q = transformations.quaternion_from_euler(x[6], x[7], 0)
             pose.orientation.w_val = q[0]
             pose.orientation.x_val = q[1]
             pose.orientation.y_val = q[2]

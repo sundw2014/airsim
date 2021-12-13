@@ -1,11 +1,5 @@
-# 3D Control of Quadcopter
-# based on https://github.com/juanmed/quadrotor_sim/blob/master/3D_Quadrotor/3D_control_with_body_drag.py
-# The dynamics is from pp. 17, Eq. (2.22). https://www.kth.se/polopoly_fs/1.588039.1550155544!/Thesis%20KTH%20-%20Francesco%20Sabatino.pdf
-# The linearization is from Different Linearization Control Techniques for
-# a Quadrotor System (many typos)
-
 import dynamics
-from dynamics import g
+from dynamics import g, A, B, kT
 import numpy as np
 import scipy
 from scipy.integrate import odeint
@@ -28,19 +22,6 @@ def lqr(A, B, Q, R):
 
     return np.asarray(K), np.asarray(X), np.asarray(eigVals)
 
-####################### linearization ##################
-# The state variables are x, y, z, vx, vy, vz, theta_x, theta_y
-A = np.zeros([8,8])
-A[0, 3] = 1.
-A[1, 4] = 1.
-A[2, 5] = 1.
-A[3, 6] = g
-A[4, 7] = g
-B = np.zeros([8, 3])
-B[5, 0] = 1.
-B[6, 1] = 1.
-B[7, 2] = 1.
-
 ####################### solve LQR #######################
 n = A.shape[0]
 m = B.shape[1]
@@ -54,7 +35,7 @@ K, _, _ = lqr(A, B, Q, R)
 ####################### The controller ######################
 def u(x, goal):
     goal = np.array(goal)
-    return K.dot(np.array(goal.reshape(-1).tolist()+[0, ] * 5) - x)
+    return K.dot(np.array(goal.reshape(-1).tolist()+[0, ] * 7) - x) + [g / kT, 0, 0]
 
 ######################## The closed_loop system #######################
 def cl_nonlinear(x, t, goal):
