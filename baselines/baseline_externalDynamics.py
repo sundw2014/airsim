@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 import airsimdroneracinglab as airsim
-import cv2
 import threading
 import time
 import utils
@@ -331,7 +330,7 @@ class BaselineRacer(object):
 
     def run(self):
         t = 0
-        dt = 0.05
+        dt = 0.01
         state = State('init')
         pose = self.airsim_client.simGetVehiclePose(
             vehicle_name=self.drone_name
@@ -366,7 +365,7 @@ class BaselineRacer(object):
                 ignore_collison=True
             )
             t += dt
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     def next_state(self, curr_pose, state):
         if state['phase'] == 'init':
