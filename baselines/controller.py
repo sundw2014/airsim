@@ -35,7 +35,7 @@ K, _, _ = lqr(A, B, Q, R)
 ####################### The controller ######################
 def u(x, goal):
     goal = np.array(goal)
-    return K.dot(np.array(goal.reshape(-1).tolist()+[0, ] * 7) - x) + [g / kT, 0, 0]
+    return K.dot([goal[0],0,0,0, goal[1],0,0,0, goal[2],0] - x) + [0, 0, g / kT]
 
 ######################## The closed_loop system #######################
 def cl_nonlinear(x, t, goal):
@@ -45,7 +45,7 @@ def cl_nonlinear(x, t, goal):
 
 # simulate
 def simulate(x, goal, dt):
-    curr_position = np.array(x)[:3]
+    curr_position = np.array(x)[[0, 4, 8]]
     error = goal - curr_position
     distance = np.sqrt((error**2).sum())
     if distance > 1:

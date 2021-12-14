@@ -345,17 +345,17 @@ class BaselineRacer(object):
             dtype=np.float64,
         )
         theta_x, theta_y, theta_z = transformations.euler_from_quaternion(q)
-        x = [pose.position.x_val, pose.position.y_val, pose.position.z_val, 0, 0, 0, theta_x, theta_y, 0, 0]
+        x = [pose.position.x_val, 0, theta_x, 0, pose.position.y_val, 0, theta_y, 0, pose.position.z_val, 0]
         while True:
             if state['phase'] == 'terminate':
                 break
             state = self.next_state(x, state)
-            print(np.array(x)[:3], state['coord'])
+            print(np.array(x)[[0,4,8]], state['coord'])
             x = simulate(x, state['coord'], dt)
             pose.position.x_val = x[0]
-            pose.position.y_val = x[1]
-            pose.position.z_val = x[2]
-            q = transformations.quaternion_from_euler(x[6], x[7], 0)
+            pose.position.y_val = x[4]
+            pose.position.z_val = x[8]
+            q = transformations.quaternion_from_euler(x[2], x[6], 0)
             pose.orientation.w_val = q[0]
             pose.orientation.x_val = q[1]
             pose.orientation.y_val = q[2]
@@ -372,7 +372,7 @@ class BaselineRacer(object):
             state = State('before', 0, self.before_gate(0))
         else:
             threshold = 0.1
-            if distance(np.array(curr_pose)[:3], state['coord']) < threshold:
+            if distance(np.array(curr_pose)[[0,4,8]], state['coord']) < threshold:
                 if state['phase'] == 'before':
                     state['phase'] = 'center'
                     state['coord'] = self.center_gate(state['id'])
