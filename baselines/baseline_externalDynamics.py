@@ -7,6 +7,8 @@ import numpy as np
 import math
 from controller import simulate
 import transformations
+import rospy
+from std_msgs.msg import Float64MultiArray
 
 def State(phase, idx=None, coord=None):
     return {'phase': phase, 'id': idx, 'coord': coord}
@@ -194,7 +196,8 @@ class BaselineRacer(object):
                 [q[1, 3] - q[2, 0], q[2, 3] + q[1, 0], 1.0 - q[1, 1] - q[2, 2]],
             ]
         )
-        gate_facing_vector = rotation_matrix[:, 1]
+        gate_facing_vector = rotation_matrix[:3, 1]
+        gate_facing_vector = gate_facing_vector / (np.sqrt((gate_facing_vector**2).sum()))
         return airsim.Vector3r(
             scale * gate_facing_vector[0],
             scale * gate_facing_vector[1],
@@ -329,6 +332,10 @@ class BaselineRacer(object):
         )
 
     def run(self):
+        rospy.init_node('airsim', anonymous=True)
+        pub_x = rospy.Publisher('airsim/x', Float64MultiArray, queue_size=10)
+        pub_goal = rospy.Publisher('airsim/goal', Float64MultiArray, queue_size=10)
+
         t = 0
         dt = 0.01
         state = State('init')
@@ -350,7 +357,12 @@ class BaselineRacer(object):
             if state['phase'] == 'terminate':
                 break
             state = self.next_state(x, state)
-            print(np.array(x)[[0,4,8]], state['coord'])
+            print(np.array(x)[[0,4,8]], state['phase'], state['coord'])
+            data = Float64MultiArray()
+            data.data = np.array(x)
+            pub_x.publish(data)
+            data.data = state['coord']
+            pub_goal.publish(data)
             x = simulate(x, state['coord'], dt)
             pose.position.x_val = x[0]
             pose.position.y_val = x[4]
@@ -376,16 +388,18 @@ class BaselineRacer(object):
                 if state['phase'] == 'before':
                     state['phase'] = 'center'
                     state['coord'] = self.center_gate(state['id'])
-                if state['phase'] == 'center':
+                elif state['phase'] == 'center':
                     state['phase'] = 'after'
                     state['coord'] = self.after_gate(state['id'])
-                if state['phase'] == 'after':
+                elif state['phase'] == 'after':
                     state['phase'] = 'before'
                     if state['id'] == len(self.gate_poses_ground_truth) - 1:
                         state['phase'] = 'terminate'
                     else:
                         state['id'] += 1
                         state['coord'] = self.before_gate(state['id'])
+                else:
+                    raise ValueError('wrong state')
         return state
 
     def before_gate(self, idx):
