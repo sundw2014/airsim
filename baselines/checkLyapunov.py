@@ -21,7 +21,6 @@ def dVdt(x):
 x_lb = np.array([-1, -1, -10 / 180. * np.pi, -1, -1, -1, -10 / 180. * np.pi, -1, -1, -1])
 x_ub = np.array([1, 1, 10 / 180. * np.pi, 1, 1, 1, 10 / 180. * np.pi, 1, 1, 1])
 
-
 LHS = []
 RHS = []
 
@@ -33,4 +32,31 @@ for _ in range(1000):
 LHS = np.array(LHS)
 RHS = np.array(RHS)
 
-from IPython import embed; embed()
+_lambda = np.max(LHS / RHS)
+
+from controller import cl_nonlinear
+from scipy.integrate import odeint
+dt = 0.01
+x = x_lb + np.random.rand(*x_lb.shape) * (x_ub - x_lb)
+
+# simulate
+def simulate(x):
+    return odeint(cl_nonlinear, x, [0, dt], args=(np.zeros(10),))[-1]
+
+Vs = [V(x).item(), ]
+ts = [0., ]
+refs = [Vs[0], ]
+for i in range(1000):
+    t = i * dt
+    x = simulate(x)
+    Vs.append(V(x).item())
+    ts.append(t)
+    refs.append(np.exp(_lambda * t) * Vs[0])
+from matplotlib import pyplot as plt
+plt.plot(ts, Vs, label='sample')
+plt.plot(ts, refs, label=r'$V(t) = e^{%.3f t} V(0)$'%_lambda)
+plt.xlabel('t (s)')
+plt.ylabel('V(x(t))')
+plt.yscale('log')
+plt.legend()
+plt.show()
