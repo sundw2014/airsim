@@ -42,3 +42,4 @@ x = scipy.optimize.brute(_lambda, np.array([x_lb, x_ub]).T.tolist(), finish=None
 # from IPython import embed; embed()
 
 print('lambda by optimization: %.4f'%-_lambda(x))
+

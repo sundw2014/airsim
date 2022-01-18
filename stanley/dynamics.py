@@ -25,3 +25,28 @@ def f(x):
                       - vf * np.sin(delta) / L])
 
     return dot_x
+
+def dfdx(x):
+    # x: bs x n
+    # f: bs x n
+    d, psi = x.reshape(-1).tolist()
+
+    delta = psi + np.arctan(K * d / vf)
+    DdeltaDd = 1 / (1 + (K * d / vf) ** 2) * K / vf
+    if np.abs(delta) < delta_max:
+        J = np.array([[- vf * np.cos(delta - psi) * DdeltaDd, 0], 
+                      [- vf * np.cos(delta) / L * DdeltaDd, - vf * np.cos(delta) / L * 1]])
+    else:
+        J = np.zeros([2,2])
+
+    return J
+
+def dudx(x):
+    # x: bs x n
+    # f: bs x n
+    d, psi = x.reshape(-1).tolist()
+
+    delta_pre = psi + np.arctan(K * d / vf)
+    DdeltaDpsi = 1
+    DdeltaDd = 1 / (1 + (K * d / vf) ** 2) * K / vf
+    return np.array([DdeltaDd, DdeltaDpsi])
