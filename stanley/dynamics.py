@@ -37,7 +37,8 @@ def dfdx(x):
         J = np.array([[- vf * np.cos(delta - psi) * DdeltaDd, 0], 
                       [- vf * np.cos(delta) / L * DdeltaDd, - vf * np.cos(delta) / L * 1]])
     else:
-        J = np.zeros([2,2])
+        J = np.array([[0, 0], 
+                      [0, - vf * np.cos(delta_max) / L * 1]])
 
     return J
 
