@@ -3,7 +3,7 @@ import scipy
 import scipy.optimize
 from dynamics import f
 
-P = np.eye(2)
+P = np.array([[1,0],[0,1.5]])
 
 def V(x):
 	x = x.reshape(-1,1)
@@ -32,15 +32,13 @@ LHS = np.array(LHS)
 RHS = np.array(RHS)
 
 _lambda = np.max(LHS / RHS)
-
+print('lambda by samples: %.4f'%_lambda)
 
 def _lambda(x):
     return -dVdt(x).item() / V(x).item()
 
-x0 = x_lb + np.random.rand(*x_lb.shape) * (x_ub - x_lb)
+x = scipy.optimize.brute(_lambda, np.array([x_lb, x_ub]).T.tolist(), finish=None)
 
-res = scipy.optimize.minimize(_lambda, x0, bounds=[[-1,1], [-np.pi/3, np.pi/3]])
+# from IPython import embed; embed()
 
-from IPython import embed; embed()
-
-print(-_lambda(res.x))
+print('lambda by optimization: %.4f'%-_lambda(x))

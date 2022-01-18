@@ -15,13 +15,13 @@ def f(x):
     if np.abs(delta_pre) < delta_max:
         delta = delta_pre
     elif delta_pre >= delta_max:
-        print('delta_max')
+        # print('delta_max')
         delta = delta_max
     else:
-        print('-delta_max')
+        # print('-delta_max')
         delta = -delta_max
 
     dot_x = np.array([- vf * np.sin(delta - psi),
-                      - vf * np.sin(delta)])
+                      - vf * np.sin(delta) / L])
 
     return dot_x
