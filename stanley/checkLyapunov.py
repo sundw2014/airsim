@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+import scipy.optimize
 from dynamics import f
 
 P = np.eye(2)
@@ -31,5 +32,13 @@ LHS = np.array(LHS)
 RHS = np.array(RHS)
 
 _lambda = np.max(LHS / RHS)
+
+
+def _lambda(x):
+    return -dVdt(x).item() / V(x).item()
+
+x0 = x_lb + np.random.rand(*x_lb.shape) * (x_ub - x_lb)
+
+res = scipy.optimize.minimize(_lambda, x0, bounds=[[-1,1], [-np.pi/3, np.pi/3]])
 
 from IPython import embed; embed()
