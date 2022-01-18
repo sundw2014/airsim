@@ -42,3 +42,5 @@ x0 = x_lb + np.random.rand(*x_lb.shape) * (x_ub - x_lb)
 res = scipy.optimize.minimize(_lambda, x0, bounds=[[-1,1], [-np.pi/3, np.pi/3]])
 
 from IPython import embed; embed()
+
+print(-_lambda(res.x))
