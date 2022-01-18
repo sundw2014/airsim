@@ -30,6 +30,6 @@ for _ in range(1000):
 LHS = np.array(LHS)
 RHS = np.array(RHS)
 
-from IPython import embed; embed()
-
 _lambda = np.max(LHS / RHS)
+
+from IPython import embed; embed()
