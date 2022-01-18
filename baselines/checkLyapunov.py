@@ -6,6 +6,10 @@ from controller import K
 Acl = A-B.dot(K)
 P = scipy.linalg.solve_continuous_lyapunov(Acl.T, -np.eye(A.shape[0]))
 
+from scipy.linalg import sqrtm
+C = sqrtm(P)
+print('lambda_max = %f'%np.max(np.linalg.eig(C)[0]))
+
 def V(x):
 	x = x.reshape(-1,1)
 	return x.T.dot(P).dot(x)
