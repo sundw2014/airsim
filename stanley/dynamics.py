@@ -51,3 +51,29 @@ def dudx(x):
     DdeltaDpsi = 1
     DdeltaDd = 1 / (1 + (K * d / vf) ** 2) * K / vf
     return np.array([DdeltaDd, DdeltaDpsi])
+
+def g(x):
+    # x: bs x n
+    # f: bs x n
+    d, psi = x.reshape(-1).tolist()
+
+    delta_pre = psi + np.arctan(K * d / vf)
+    if np.abs(delta_pre) < delta_max:
+        delta = delta_pre
+    elif delta_pre >= delta_max:
+        delta = delta_max
+    else:
+        delta = -delta_max
+
+    return delta
+
+# non-linear dynamics
+def fxz(x, z):
+    # x: bs x n
+    # f: bs x n
+    d, psi = x.reshape(-1).tolist()
+    delta = g(x + z)
+    dot_x = np.array([- vf * np.sin(delta - psi),
+                      - vf * np.sin(delta) / L])
+
+    return dot_x

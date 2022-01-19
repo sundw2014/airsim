@@ -1,25 +1,35 @@
 import numpy as np
 import scipy
 import scipy.optimize
-from dynamics import dfdx, dudx
+from dynamics import dfdx, dudx, fxz
 
 x_lb = np.array([-1, -np.pi / 3])
 x_ub = np.array([1, np.pi / 3])
 
-def objective(x):
-	return - np.linalg.norm(dfdx(x), ord=2)
+# def objective(x):
+# 	return - np.linalg.norm(dfdx(x), ord=2)
 
-x = scipy.optimize.brute(objective, np.array([x_lb, x_ub]).T.tolist(), finish=None)
+# x = scipy.optimize.brute(objective, np.array([x_lb, x_ub]).T.tolist(), finish=None)
+
+# # from IPython import embed; embed()
+
+# print('Lipschitz constant of f by optimization: %.4f'%-objective(x))
+
+# def objective(x):
+# 	return - np.sqrt((dudx(x)**2).sum())
+
+# x = scipy.optimize.brute(objective, np.array([x_lb, x_ub]).T.tolist(), finish=None)
+
+# # from IPython import embed; embed()
+
+# print('Lipschitz constant of u by optimization: %.4f'%-objective(x))
+
+def objective(i):
+    x, z = i[:2], i[2:]
+    return -np.sqrt(((fxz(x, z) - fxz(x, 0))**2).sum()) / np.sqrt((z**2).sum())
+
+x = scipy.optimize.brute(objective, np.array([x_lb, x_ub]).T.tolist()+[[-0.05, 0.05], [-0.05, 0.05]], finish=None)
 
 # from IPython import embed; embed()
 
 print('Lipschitz constant of f by optimization: %.4f'%-objective(x))
-
-def objective(x):
-	return - np.sqrt((dudx(x)**2).sum())
-
-x = scipy.optimize.brute(objective, np.array([x_lb, x_ub]).T.tolist(), finish=None)
-
-# from IPython import embed; embed()
-
-print('Lipschitz constant of u by optimization: %.4f'%-objective(x))
