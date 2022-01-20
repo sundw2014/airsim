@@ -72,7 +72,7 @@ def fxz(x, z):
     # x: bs x n
     # f: bs x n
     d, psi = x.reshape(-1).tolist()
-    delta = g(x + z)
+    delta = g(x.reshape(-1) + z.reshape(-1))
     dot_x = np.array([- vf * np.sin(delta - psi),
                       - vf * np.sin(delta) / L])
 
